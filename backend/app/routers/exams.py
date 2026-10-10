@@ -14,7 +14,7 @@ router = APIRouter(tags=["exams"])
 
 def _session_out(s: ExamSession) -> SessionOut:
     return SessionOut(
-        id=s.id, exam_title=s.exam.title, student_name=s.student.name,
+        id=s.id, exam_id=s.exam_id, exam_title=s.exam.title, student_name=s.student.name,
         started_at=s.started_at, ended_at=s.ended_at, score=s.score,
         risk_score=s.risk_score, risk_level=risk_level(s.risk_score),
     )
@@ -47,7 +47,7 @@ def start_exam(exam_id: int, db: Session = Depends(get_db), user: User = Depends
     exam = db.get(Exam, exam_id)
     if not exam:
         raise HTTPException(404, "Exam not found")
-      now = datetime.now(timezone.utc)
+    now = datetime.now(timezone.utc)
     total = exam.duration_minutes * 60
     sess = db.scalar(
         select(ExamSession)

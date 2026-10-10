@@ -18,7 +18,9 @@ export default function Exams() {
           <div className="card" key={e.id}>
             <h3>{e.title}</h3>
             <p className="muted">{e.question_count} questions · {e.duration_minutes} min</p>
-            <Link className="primary btn" to={`/exam/${e.id}`}>Start exam</Link>
+           <Link className="primary btn" to={`/exam/${e.id}`}>
+  {sessions.some((s) => s.exam_id === e.id && !s.ended_at) ? "Resume exam" : "Start exam"}
+</Link>
           </div>
         ))}
         {!exams.length && <p className="muted">No exams yet. Ask a proctor to create one.</p>}

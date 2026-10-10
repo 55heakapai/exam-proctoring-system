@@ -68,6 +68,7 @@ class SubmitIn(BaseModel):
 
 class SessionOut(BaseModel):
     id: int
+    exam_id: int 
     exam_title: str
     student_name: str
     started_at: datetime
