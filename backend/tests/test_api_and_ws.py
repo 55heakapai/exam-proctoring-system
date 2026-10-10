@@ -94,3 +94,16 @@ def test_detection_decision_logic():
     assert [f.kind for f in findings_from_detections(2, [])] == ["multiple_faces"]
     got = findings_from_detections(1, ["person", "cell phone", "cell phone", "chair"])
     assert [(f.kind, f.detail) for f in got] == [("prohibited_object", "cell phone")]
+
+def test_start_resumes_unfinished_attempt(client):
+    p = register(client, f"p{uuid.uuid4().hex[:6]}@x.com", "proctor")
+    s = register(client, f"s{uuid.uuid4().hex[:6]}@x.com", "student")
+    exam_id = make_exam(client, p)
+    first = client.post(f"/exams/{exam_id}/start", headers=auth(s)).json()
+    again = client.post(f"/exams/{exam_id}/start", headers=auth(s)).json()
+    assert again["session_id"] == first["session_id"]
+    assert 0 < again["remaining_seconds"] <= 300
+    qid = first["questions"][0]["id"]
+    client.post(f"/sessions/{first['session_id']}/submit", headers=auth(s), json={"answers": {qid: 1}})
+    fresh = client.post(f"/exams/{exam_id}/start", headers=auth(s)).json()
+    assert fresh["session_id"] != first["session_id"]

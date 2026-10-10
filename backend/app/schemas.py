@@ -58,6 +58,7 @@ class StartOut(BaseModel):
     session_id: int
     title: str
     duration_minutes: int
+    remaining_seconds: int 
     questions: list[QuestionOut]
 
 

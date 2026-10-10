@@ -47,11 +47,27 @@ def start_exam(exam_id: int, db: Session = Depends(get_db), user: User = Depends
     exam = db.get(Exam, exam_id)
     if not exam:
         raise HTTPException(404, "Exam not found")
-    sess = ExamSession(exam_id=exam.id, student_id=user.id)
-    db.add(sess)
+      now = datetime.now(timezone.utc)
+    total = exam.duration_minutes * 60
+    sess = db.scalar(
+        select(ExamSession)
+        .where(ExamSession.exam_id == exam.id, ExamSession.student_id == user.id, ExamSession.ended_at.is_(None))
+        .order_by(ExamSession.id.desc())
+    )
+    if sess:
+        started = sess.started_at if sess.started_at.tzinfo else sess.started_at.replace(tzinfo=timezone.utc)
+        if (now - started).total_seconds() >= total:  # time ran out: close it
+            sess.ended_at, sess.score = now, 0
+            sess = None
+    if sess is None:
+        sess = ExamSession(exam_id=exam.id, student_id=user.id)
+        db.add(sess)
     db.commit()
+    started = sess.started_at if sess.started_at.tzinfo else sess.started_at.replace(tzinfo=timezone.utc)
+    remaining = max(0, int(total - (now - started).total_seconds()))
     return StartOut(
         session_id=sess.id, title=exam.title, duration_minutes=exam.duration_minutes,
+        remaining_seconds=remaining,
         questions=[{"id": q.id, "text": q.text, "options": q.options} for q in exam.questions],
     )
 

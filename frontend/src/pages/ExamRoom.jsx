@@ -37,7 +37,7 @@ export default function ExamRoom() {
       await document.documentElement.requestFullscreen?.();
       const data = await api(`/exams/${examId}/start`, { method: "POST" });
       setExam(data);
-      setSecondsLeft(data.duration_minutes * 60);
+      setSecondsLeft(data.remaining_seconds);  
     } catch (e) {
       setError(e.message.includes("Permission") ? "Camera access is required to take this exam." : e.message);
     }
